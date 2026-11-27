@@ -15,6 +15,9 @@ Mart-nycklar är hash-keys som hex-strängar, eftersom Power BI inte stödjer bi
 
 ## Köra
 Snowflake-uppgifter läses från miljövariabler (se `profiles.yml`), t.ex. via `.env` i repots rot.
+dbt-projekt som transformerar SWAPI-data i Snowflake: RAW → staging → raw_vault (Data Vault 2.0) → marts (star schema för Power BI).
+
+Se [../AGENTS.md](../AGENTS.md) för regler och definition of done.
 
 ```
 dbt deps
@@ -30,3 +33,6 @@ dbt docs generate
 - Dimensionerna `dim_species` och `dim_planet` har en Unknown-medlem (nyckel = 32 nollor).
 
 `dbt build --full-refresh` bygger om raw_vault från grunden (historiken i satelliterna tappas).
+```
+
+Anslutningen definieras i `profiles.yml` i repots rot (miljövariabler från `.env`).
