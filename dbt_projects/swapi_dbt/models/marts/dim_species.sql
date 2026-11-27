@@ -18,18 +18,10 @@ with species as (
 
 select * from species
 
-union all
+union all by name
 
--- Okänd medlem för personer utan art (fact_person_film.species_key pekar hit)
+-- Okänd medlem för personer utan art (fact_person_film.species_key pekar hit).
+-- BY NAME: kolumner som inte anges blir null.
 select
-    {{ unknown_key() }},
-    null,
-    'Unknown',
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null
+    {{ unknown_key() }} as species_key,
+    'Unknown' as name

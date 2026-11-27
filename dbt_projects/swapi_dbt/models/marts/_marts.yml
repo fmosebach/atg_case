@@ -18,7 +18,7 @@ models:
       - name: film_id
         description: SWAPI-id.
   - name: dim_planet
-    description: Dimension för planet (senaste attributversionen).
+    description: Dimension för planet (senaste attributversionen) plus en okänd medlem för personer utan hemvärld.
     columns:
       - name: planet_key
         description: Surrogatnyckel (hex av hub_planet.planet_hk).
@@ -67,7 +67,7 @@ models:
           - not_null
           - relationships: {to: ref('dim_film'), field: film_key}
       - name: homeworld_planet_key
-        description: Personens hemvärld.
+        description: Personens hemvärld, eller Unknown-nyckeln om hemvärld saknas.
         data_tests:
           - not_null
           - relationships: {to: ref('dim_planet'), field: planet_key}

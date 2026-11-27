@@ -22,4 +22,11 @@ dbt build
 dbt docs generate
 ```
 
+## Att känna till
+- `base_*` tar bara senaste batchen per objekt. Körs ingestion flera gånger mellan dbt-körningar missar satelliterna mellanversionerna (acceptabelt för SWAPI).
+- `'unknown'`, `'n/a'` och intervall i numeriska fält blir null (`to_num`), vilket gör dem likvärdiga i hashdiff.
+- Hash-keys i link-staging beräknas med samma `automate_dv.hash` som i hubbarna; `relationships`-testerna i `_raw_vault.yml` skyddar mot att de glider isär.
+- `threads: 1` i `profiles.yml` beror på att `externalbrowser` ger en inloggning per anslutning.
+- Dimensionerna `dim_species` och `dim_planet` har en Unknown-medlem (nyckel = 32 nollor).
+
 `dbt build --full-refresh` bygger om raw_vault från grunden (historiken i satelliterna tappas).

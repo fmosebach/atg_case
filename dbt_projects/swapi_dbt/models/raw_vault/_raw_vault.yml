@@ -213,6 +213,8 @@ models:
           - relationships: {to: ref('hub_person'), field: person_hk}
       - name: person_details_hashdiff
         data_tests: [not_null]
+      - name: load_ts
+        data_tests: [not_null]
   - name: sat_film_details
     description: Beskrivande attribut för film (titel, avsnitt, regissör, producent, premiär, inledningstext). Insert-only.
     data_tests:
@@ -224,6 +226,8 @@ models:
           - not_null
           - relationships: {to: ref('hub_film'), field: film_hk}
       - name: film_details_hashdiff
+        data_tests: [not_null]
+      - name: load_ts
         data_tests: [not_null]
   - name: sat_planet_details
     description: Beskrivande attribut för planet (klimat, terräng, gravitation, storlek, befolkning m.m.). Insert-only.
@@ -237,6 +241,8 @@ models:
           - relationships: {to: ref('hub_planet'), field: planet_hk}
       - name: planet_details_hashdiff
         data_tests: [not_null]
+      - name: load_ts
+        data_tests: [not_null]
   - name: sat_species_details
     description: Beskrivande attribut för art (klassificering, språk, längd, livslängd, färger). Insert-only.
     data_tests:
@@ -248,6 +254,8 @@ models:
           - not_null
           - relationships: {to: ref('hub_species'), field: species_hk}
       - name: species_details_hashdiff
+        data_tests: [not_null]
+      - name: load_ts
         data_tests: [not_null]
   - name: sat_starship_details
     description: Beskrivande attribut för rymdskepp (modell, tillverkare, klass, kostnad, mått, kapacitet). Insert-only.
@@ -261,6 +269,8 @@ models:
           - relationships: {to: ref('hub_starship'), field: starship_hk}
       - name: starship_details_hashdiff
         data_tests: [not_null]
+      - name: load_ts
+        data_tests: [not_null]
   - name: sat_vehicle_details
     description: Beskrivande attribut för fordon (modell, tillverkare, klass, kostnad, mått, kapacitet). Insert-only.
     data_tests:
@@ -272,4 +282,6 @@ models:
           - not_null
           - relationships: {to: ref('hub_vehicle'), field: vehicle_hk}
       - name: vehicle_details_hashdiff
+        data_tests: [not_null]
+      - name: load_ts
         data_tests: [not_null]

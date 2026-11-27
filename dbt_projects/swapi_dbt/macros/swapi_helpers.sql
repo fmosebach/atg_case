@@ -3,7 +3,8 @@
     try_to_number(regexp_substr({{ column }}, '/{{ entity }}/([0-9]+)/?$', 1, 1, 'e', 1))
 {%- endmacro %}
 
-{# Parsar numeriska textfält; 'unknown', 'n/a' och intervall blir null. Tusentalsavgränsare tas bort. #}
+{# Parsar numeriska textfält; 'unknown', 'n/a' och intervall blir null. Tusentalsavgränsare tas bort.
+   OBS: 'unknown' och saknat värde blir därmed samma sak (null) i satellitens hashdiff. #}
 {% macro to_num(column) -%}
     try_to_decimal(trim(replace({{ column }}::string, ',', '')), 38, 2)
 {%- endmacro %}
