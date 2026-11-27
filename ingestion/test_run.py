@@ -129,6 +129,13 @@ def test_load_entity_is_append_only():
     assert not any("DELETE" in s or "TRUNCATE" in s for s in cur.sql)
 
 
+def test_load_entity_chunks_large_batches(monkeypatch):
+    monkeypatch.setattr(run, "INSERT_CHUNK_SIZE", 2)
+    cur = FakeCursor()
+    run.load_entity(cur, "people", [{"url": f"u{i}"} for i in range(5)], "b1", NOW)
+    assert len(cur.sql) == 3
+
+
 def test_sanity_check_mismatch_raises():
     with pytest.raises(RuntimeError, match="Sanity check"):
         run.sanity_check(FakeCursor(count=1), "people", "b1", loaded=2, expected=2)

@@ -28,6 +28,7 @@ BACKOFF_SECONDS = 1
 REQUEST_TIMEOUT = 30
 RETRY_STATUS = {429, 500, 502, 503, 504}
 MAX_RETRY_AFTER = 60
+INSERT_CHUNK_SIZE = 1000
 
 log = logging.getLogger("ingestion")
 
@@ -116,13 +117,16 @@ def load_entity(cur, entity, records, batch_id, load_ts):
     """Append-only: lägger till en ny batch och rör aldrig tidigare rader (historik bevaras för satelliterna)."""
     if not records:
         raise ValueError(f"{entity}: API:et returnerade inga poster, inget att ladda")
-    placeholders = ", ".join(["(%s, %s, %s, %s)"] * len(records))
-    params = [p for r in records for p in (json.dumps(r), r["url"], load_ts.isoformat(), batch_id)]
-    cur.execute(
-        f"INSERT INTO {SCHEMA}.{entity.upper()} (raw_json, source_url, load_ts, batch_id) "
-        f"SELECT PARSE_JSON(column1), column2, column3::TIMESTAMP_TZ, column4 FROM VALUES {placeholders}",
-        params,
-    )
+    # Snowflake tillåter max 16 384 uttryck i en VALUES-lista (4 per rad här), så vi chunkar.
+    for start in range(0, len(records), INSERT_CHUNK_SIZE):
+        chunk = records[start:start + INSERT_CHUNK_SIZE]
+        placeholders = ", ".join(["(%s, %s, %s, %s)"] * len(chunk))
+        params = [p for r in chunk for p in (json.dumps(r), r["url"], load_ts.isoformat(), batch_id)]
+        cur.execute(
+            f"INSERT INTO {SCHEMA}.{entity.upper()} (raw_json, source_url, load_ts, batch_id) "
+            f"SELECT PARSE_JSON(column1), column2, column3::TIMESTAMP_TZ, column4 FROM VALUES {placeholders}",
+            params,
+        )
 
 
 def sanity_check(cur, entity, batch_id, loaded, expected):
