@@ -27,12 +27,23 @@ MAX_ATTEMPTS = 3
 BACKOFF_SECONDS = 1
 REQUEST_TIMEOUT = 30
 RETRY_STATUS = {429, 500, 502, 503, 504}
+MAX_RETRY_AFTER = 60
 
 log = logging.getLogger("ingestion")
 
 
+def retry_after_seconds(exc):
+    """Sekunder enligt Retry-After (endast heltalsformen), annars None."""
+    resp = getattr(exc, "response", None)
+    value = resp.headers.get("Retry-After") if resp is not None and getattr(resp, "headers", None) else None
+    try:
+        return min(max(int(value), 0), MAX_RETRY_AFTER)
+    except (TypeError, ValueError):
+        return None
+
+
 def get_json(url, session, sleep=time.sleep):
-    """GET med max MAX_ATTEMPTS försök och exponentiell backoff (1s, 2s, ...)."""
+    """GET med max MAX_ATTEMPTS försök och exponentiell backoff (1s, 2s, ...); Retry-After väger tyngre om den är längre."""
     for attempt in range(1, MAX_ATTEMPTS + 1):
         try:
             resp = session.get(url, timeout=REQUEST_TIMEOUT)
@@ -49,17 +60,26 @@ def get_json(url, session, sleep=time.sleep):
             if not retryable or attempt == MAX_ATTEMPTS:
                 log.error("Misslyckades hämta %s (försök %d/%d): %s", url, attempt, MAX_ATTEMPTS, exc)
                 raise
-            delay = BACKOFF_SECONDS * 2 ** (attempt - 1)
+            delay = max(BACKOFF_SECONDS * 2 ** (attempt - 1), retry_after_seconds(exc) or 0)
             log.warning("Fel vid %s (försök %d/%d): %s - nytt försök om %ss", url, attempt, MAX_ATTEMPTS, exc, delay)
             sleep(delay)
 
 
 def fetch_entity(entity, session, sleep=time.sleep):
     """Följer `next` tills den är null. Returnerar (poster, count enligt API)."""
-    url = f"{BASE_URL}/{entity}/"
+    first_url = f"{BASE_URL}/{entity}/"
+    url, seen = first_url, set()
     records, expected = [], None
     while url:
+        # `next` måste stanna inom BASE_URL/<entitet>/ och får inte upprepas (skydd mot loopar/fel värd).
+        if not url.startswith(first_url):
+            raise RuntimeError(f"{entity}: oväntad next-URL {url!r}, förväntade prefix {first_url!r}")
+        if url in seen:
+            raise RuntimeError(f"{entity}: pagineringsloop vid {url!r}")
+        seen.add(url)
         page = get_json(url, session, sleep)
+        if not isinstance(page, dict) or not isinstance(page.get("results"), list):
+            raise RuntimeError(f"{entity}: oväntat svar från {url}, saknar 'results'-lista")
         if expected is None:
             expected = page.get("count")
         records.extend(page["results"])
@@ -82,36 +102,52 @@ def connect():
     )
 
 
+def ensure_tables(cur, entities):
+    # DDL committar implicit i Snowflake, så det görs före transaktionen.
+    cur.execute(f"CREATE SCHEMA IF NOT EXISTS {SCHEMA}")
+    for entity in entities:
+        cur.execute(
+            f"CREATE TABLE IF NOT EXISTS {SCHEMA}.{entity.upper()} ("
+            "raw_json VARIANT, source_url STRING, load_ts TIMESTAMP_TZ, batch_id STRING)"
+        )
+
+
 def load_entity(cur, entity, records, batch_id, load_ts):
-    """Full refresh i en transaktion: omkörning ger inga dubbletter och ett fel lämnar tabellen orörd."""
-    table = f"{SCHEMA}.{entity.upper()}"
+    """Append-only: lägger till en ny batch och rör aldrig tidigare rader (historik bevaras för satelliterna)."""
+    if not records:
+        raise ValueError(f"{entity}: API:et returnerade inga poster, inget att ladda")
+    placeholders = ", ".join(["(%s, %s, %s, %s)"] * len(records))
+    params = [p for r in records for p in (json.dumps(r), r["url"], load_ts.isoformat(), batch_id)]
     cur.execute(
-        f"CREATE TABLE IF NOT EXISTS {table} ("
-        "raw_json VARIANT, source_url STRING, load_ts TIMESTAMP_TZ, batch_id STRING)"
+        f"INSERT INTO {SCHEMA}.{entity.upper()} (raw_json, source_url, load_ts, batch_id) "
+        f"SELECT PARSE_JSON(column1), column2, column3::TIMESTAMP_TZ, column4 FROM VALUES {placeholders}",
+        params,
     )
+
+
+def sanity_check(cur, entity, batch_id, loaded, expected):
+    """Batchens radantal måste vara > 0, matcha det vi skickade in och det API:et uppger."""
+    cur.execute(f"SELECT COUNT(*) FROM {SCHEMA}.{entity.upper()} WHERE batch_id = %s", (batch_id,))
+    rows = cur.fetchone()[0]
+    if rows == 0 or rows != loaded or (expected is not None and rows != expected):
+        raise RuntimeError(
+            f"Sanity check misslyckades för {entity}: {rows} rader i batch, laddade {loaded}, API count {expected}"
+        )
+    log.info("%s: %d rader i batch %s OK", entity, rows, batch_id)
+
+
+def load_all(cur, fetched, batch_id, load_ts):
+    """Alla entiteter i EN transaktion; sanity checks körs före COMMIT och ett fel ger ROLLBACK av allt."""
+    ensure_tables(cur, fetched)
     cur.execute("BEGIN")
     try:
-        cur.execute(f"DELETE FROM {table}")
-        placeholders = ", ".join(["(%s, %s, %s, %s)"] * len(records))
-        params = [p for r in records for p in (json.dumps(r), r["url"], load_ts.isoformat(), batch_id)]
-        cur.execute(
-            f"INSERT INTO {table} (raw_json, source_url, load_ts, batch_id) "
-            f"SELECT PARSE_JSON(column1), column2, column3::TIMESTAMP_TZ, column4 FROM VALUES {placeholders}",
-            params,
-        )
+        for entity, (records, expected) in fetched.items():
+            load_entity(cur, entity, records, batch_id, load_ts)
+            sanity_check(cur, entity, batch_id, len(records), expected)
         cur.execute("COMMIT")
     except Exception:
         cur.execute("ROLLBACK")
         raise
-
-
-def sanity_check(cur, entity, expected):
-    """Radantal i RAW måste vara > 0 och matcha antalet som API:et uppger."""
-    cur.execute(f"SELECT COUNT(*) FROM {SCHEMA}.{entity.upper()}")
-    rows = cur.fetchone()[0]
-    if rows == 0 or (expected is not None and rows != expected):
-        raise RuntimeError(f"Sanity check misslyckades för {entity}: {rows} rader, förväntade {expected}")
-    log.info("%s: %d rader i %s.%s OK", entity, rows, SCHEMA, entity.upper())
 
 
 def main(argv=None):
@@ -137,17 +173,13 @@ def main(argv=None):
     load_ts = datetime.now(timezone.utc)
     log.info("Startar batch %s mot %s", batch_id, BASE_URL)
 
-    # Hämta allt först så att ett API-fel inte ger en halvladdad RAW.
+    # Hämta allt först (API-fel) och ladda sedan allt i en transaktion (laddningsfel) – RAW blir aldrig halvladdad.
     with requests.Session() as session:
         fetched = {e: fetch_entity(e, session) for e in entities}
 
     conn = connect()
     try:
-        cur = conn.cursor()
-        cur.execute(f"CREATE SCHEMA IF NOT EXISTS {SCHEMA}")
-        for entity, (records, expected) in fetched.items():
-            load_entity(cur, entity, records, batch_id, load_ts)
-            sanity_check(cur, entity, expected)
+        load_all(conn.cursor(), fetched, batch_id, load_ts)
     finally:
         conn.close()
     log.info("Klart, batch %s", batch_id)
