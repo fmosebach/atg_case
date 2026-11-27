@@ -1,6 +1,13 @@
 .env
+*.env
 .venv/
 __pycache__/
-dbt_projects/target/
-dbt_projects/dbt_packages/
-dbt_projects/logs/
+dbt_projects/**/target/
+dbt_projects/**/dbt_packages/
+dbt_projects/**/logs/
+dbt_projects/**/.user.yml
+.pytest_cache/
+*.log
+*.p8
+*.pub
+.DS_Store

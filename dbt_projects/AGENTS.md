@@ -5,7 +5,7 @@ Transformera rådata från RAW till Data Vault 2.0-modell (RAW_VAULT)
 och exponera ett star schema (MARTS) för Power BI.
 
 ## Regler
-- Rör ALDRIG filer utanför /dbt_projects/swapi_dbt.
+- Rör ALDRIG filer utanför /dbt_projects.
 - Använd automate_dv-paketet för hub/link/satellite – skriv inte
   hash-key-logik manuellt.
 - Lagerordning: staging (views) → raw_vault (hub/link/sat, tables)
