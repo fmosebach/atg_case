@@ -1,0 +1,287 @@
+version: 2
+
+models:
+  # ---------- Hubs ----------
+  - name: hub_person
+    description: Hub för person. En rad per unik person (natural key person_id).
+    columns:
+      - name: person_hk
+        description: Primary hash-key.
+        data_tests: [unique, not_null]
+      - name: person_id
+        description: Natural key (id ur SWAPI-URL).
+        data_tests: [not_null]
+  - name: hub_film
+    description: Hub för film. En rad per unik film (natural key film_id).
+    columns:
+      - name: film_hk
+        description: Primary hash-key.
+        data_tests: [unique, not_null]
+      - name: film_id
+        description: Natural key (id ur SWAPI-URL).
+        data_tests: [not_null]
+  - name: hub_planet
+    description: Hub för planet. En rad per unik planet (natural key planet_id).
+    columns:
+      - name: planet_hk
+        description: Primary hash-key.
+        data_tests: [unique, not_null]
+      - name: planet_id
+        description: Natural key (id ur SWAPI-URL).
+        data_tests: [not_null]
+  - name: hub_species
+    description: Hub för art. En rad per unik art (natural key species_id).
+    columns:
+      - name: species_hk
+        description: Primary hash-key.
+        data_tests: [unique, not_null]
+      - name: species_id
+        description: Natural key (id ur SWAPI-URL).
+        data_tests: [not_null]
+  - name: hub_starship
+    description: Hub för rymdskepp. En rad per unikt skepp (natural key starship_id).
+    columns:
+      - name: starship_hk
+        description: Primary hash-key.
+        data_tests: [unique, not_null]
+      - name: starship_id
+        description: Natural key (id ur SWAPI-URL).
+        data_tests: [not_null]
+  - name: hub_vehicle
+    description: Hub för fordon. En rad per unikt fordon (natural key vehicle_id).
+    columns:
+      - name: vehicle_hk
+        description: Primary hash-key.
+        data_tests: [unique, not_null]
+      - name: vehicle_id
+        description: Natural key (id ur SWAPI-URL).
+        data_tests: [not_null]
+
+  # ---------- Links ----------
+  - name: link_person_film
+    description: Länk mellan person och film (personen förekommer i filmen).
+    columns:
+      - name: link_person_film_hk
+        description: Primary hash-key.
+        data_tests: [unique, not_null]
+      - name: person_hk
+        data_tests:
+          - not_null
+          - relationships: {to: ref('hub_person'), field: person_hk}
+      - name: film_hk
+        data_tests:
+          - not_null
+          - relationships: {to: ref('hub_film'), field: film_hk}
+  - name: link_person_species
+    description: Länk mellan person och art.
+    columns:
+      - name: link_person_species_hk
+        description: Primary hash-key.
+        data_tests: [unique, not_null]
+      - name: person_hk
+        data_tests:
+          - not_null
+          - relationships: {to: ref('hub_person'), field: person_hk}
+      - name: species_hk
+        data_tests:
+          - not_null
+          - relationships: {to: ref('hub_species'), field: species_hk}
+  - name: link_person_starship
+    description: Länk mellan person och rymdskepp (personen har flugit skeppet).
+    columns:
+      - name: link_person_starship_hk
+        description: Primary hash-key.
+        data_tests: [unique, not_null]
+      - name: person_hk
+        data_tests:
+          - not_null
+          - relationships: {to: ref('hub_person'), field: person_hk}
+      - name: starship_hk
+        data_tests:
+          - not_null
+          - relationships: {to: ref('hub_starship'), field: starship_hk}
+  - name: link_person_vehicle
+    description: Länk mellan person och fordon (personen har kört fordonet).
+    columns:
+      - name: link_person_vehicle_hk
+        description: Primary hash-key.
+        data_tests: [unique, not_null]
+      - name: person_hk
+        data_tests:
+          - not_null
+          - relationships: {to: ref('hub_person'), field: person_hk}
+      - name: vehicle_hk
+        data_tests:
+          - not_null
+          - relationships: {to: ref('hub_vehicle'), field: vehicle_hk}
+  - name: link_person_planet
+    description: Länk mellan person och hemvärldsplanet.
+    columns:
+      - name: link_person_planet_hk
+        description: Primary hash-key.
+        data_tests: [unique, not_null]
+      - name: person_hk
+        data_tests:
+          - not_null
+          - relationships: {to: ref('hub_person'), field: person_hk}
+      - name: planet_hk
+        data_tests:
+          - not_null
+          - relationships: {to: ref('hub_planet'), field: planet_hk}
+  - name: link_film_planet
+    description: Länk mellan film och planet (planeten förekommer i filmen).
+    columns:
+      - name: link_film_planet_hk
+        description: Primary hash-key.
+        data_tests: [unique, not_null]
+      - name: film_hk
+        data_tests:
+          - not_null
+          - relationships: {to: ref('hub_film'), field: film_hk}
+      - name: planet_hk
+        data_tests:
+          - not_null
+          - relationships: {to: ref('hub_planet'), field: planet_hk}
+  - name: link_film_species
+    description: Länk mellan film och art.
+    columns:
+      - name: link_film_species_hk
+        description: Primary hash-key.
+        data_tests: [unique, not_null]
+      - name: film_hk
+        data_tests:
+          - not_null
+          - relationships: {to: ref('hub_film'), field: film_hk}
+      - name: species_hk
+        data_tests:
+          - not_null
+          - relationships: {to: ref('hub_species'), field: species_hk}
+  - name: link_film_starship
+    description: Länk mellan film och rymdskepp.
+    columns:
+      - name: link_film_starship_hk
+        description: Primary hash-key.
+        data_tests: [unique, not_null]
+      - name: film_hk
+        data_tests:
+          - not_null
+          - relationships: {to: ref('hub_film'), field: film_hk}
+      - name: starship_hk
+        data_tests:
+          - not_null
+          - relationships: {to: ref('hub_starship'), field: starship_hk}
+  - name: link_film_vehicle
+    description: Länk mellan film och fordon.
+    columns:
+      - name: link_film_vehicle_hk
+        description: Primary hash-key.
+        data_tests: [unique, not_null]
+      - name: film_hk
+        data_tests:
+          - not_null
+          - relationships: {to: ref('hub_film'), field: film_hk}
+      - name: vehicle_hk
+        data_tests:
+          - not_null
+          - relationships: {to: ref('hub_vehicle'), field: vehicle_hk}
+  - name: link_species_planet
+    description: Länk mellan art och hemvärldsplanet.
+    columns:
+      - name: link_species_planet_hk
+        description: Primary hash-key.
+        data_tests: [unique, not_null]
+      - name: species_hk
+        data_tests:
+          - not_null
+          - relationships: {to: ref('hub_species'), field: species_hk}
+      - name: planet_hk
+        data_tests:
+          - not_null
+          - relationships: {to: ref('hub_planet'), field: planet_hk}
+
+  # ---------- Satellites (insert-only, historiserade) ----------
+  # Hash-key + load_ts är satellitens unika nyckel eftersom nya versioner läggs till vid ändring.
+  - name: sat_person_details
+    description: Beskrivande attribut för person (namn, längd, vikt, färger, födelseår, kön). Insert-only.
+    data_tests:
+      - dbt_utils.unique_combination_of_columns: {combination_of_columns: [person_hk, load_ts]}
+    columns:
+      - name: person_hk
+        description: Hash-key till hub_person.
+        data_tests:
+          - not_null
+          - relationships: {to: ref('hub_person'), field: person_hk}
+      - name: person_details_hashdiff
+        data_tests: [not_null]
+      - name: load_ts
+        data_tests: [not_null]
+  - name: sat_film_details
+    description: Beskrivande attribut för film (titel, avsnitt, regissör, producent, premiär, inledningstext). Insert-only.
+    data_tests:
+      - dbt_utils.unique_combination_of_columns: {combination_of_columns: [film_hk, load_ts]}
+    columns:
+      - name: film_hk
+        description: Hash-key till hub_film.
+        data_tests:
+          - not_null
+          - relationships: {to: ref('hub_film'), field: film_hk}
+      - name: film_details_hashdiff
+        data_tests: [not_null]
+      - name: load_ts
+        data_tests: [not_null]
+  - name: sat_planet_details
+    description: Beskrivande attribut för planet (klimat, terräng, gravitation, storlek, befolkning m.m.). Insert-only.
+    data_tests:
+      - dbt_utils.unique_combination_of_columns: {combination_of_columns: [planet_hk, load_ts]}
+    columns:
+      - name: planet_hk
+        description: Hash-key till hub_planet.
+        data_tests:
+          - not_null
+          - relationships: {to: ref('hub_planet'), field: planet_hk}
+      - name: planet_details_hashdiff
+        data_tests: [not_null]
+      - name: load_ts
+        data_tests: [not_null]
+  - name: sat_species_details
+    description: Beskrivande attribut för art (klassificering, språk, längd, livslängd, färger). Insert-only.
+    data_tests:
+      - dbt_utils.unique_combination_of_columns: {combination_of_columns: [species_hk, load_ts]}
+    columns:
+      - name: species_hk
+        description: Hash-key till hub_species.
+        data_tests:
+          - not_null
+          - relationships: {to: ref('hub_species'), field: species_hk}
+      - name: species_details_hashdiff
+        data_tests: [not_null]
+      - name: load_ts
+        data_tests: [not_null]
+  - name: sat_starship_details
+    description: Beskrivande attribut för rymdskepp (modell, tillverkare, klass, kostnad, mått, kapacitet). Insert-only.
+    data_tests:
+      - dbt_utils.unique_combination_of_columns: {combination_of_columns: [starship_hk, load_ts]}
+    columns:
+      - name: starship_hk
+        description: Hash-key till hub_starship.
+        data_tests:
+          - not_null
+          - relationships: {to: ref('hub_starship'), field: starship_hk}
+      - name: starship_details_hashdiff
+        data_tests: [not_null]
+      - name: load_ts
+        data_tests: [not_null]
+  - name: sat_vehicle_details
+    description: Beskrivande attribut för fordon (modell, tillverkare, klass, kostnad, mått, kapacitet). Insert-only.
+    data_tests:
+      - dbt_utils.unique_combination_of_columns: {combination_of_columns: [vehicle_hk, load_ts]}
+    columns:
+      - name: vehicle_hk
+        description: Hash-key till hub_vehicle.
+        data_tests:
+          - not_null
+          - relationships: {to: ref('hub_vehicle'), field: vehicle_hk}
+      - name: vehicle_details_hashdiff
+        data_tests: [not_null]
+      - name: load_ts
+        data_tests: [not_null]

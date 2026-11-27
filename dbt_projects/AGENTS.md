@@ -12,8 +12,10 @@ och exponera ett star schema (MARTS) för Power BI.
   → marts (star schema, tables). Hoppa inte över lager.
 - Staging-modeller extraherar natural keys ur SWAPI-URL:er (regex på
   t.ex. `/people/(\d+)/`) och exponerar hash-keys/hashdiffs.
-- Varje hub/link/satellite ska ha minst: not_null + unique-test på
-  sin primary hash-key.
+- Varje hub/link ska ha minst: not_null + unique-test på sin primary
+  hash-key. Satelliter är historiserade (flera rader per hash-key), så
+  de testas med not_null på hash-key och load_ts samt
+  dbt_utils.unique_combination_of_columns på [hash-key, load_ts].
 - Namngivning: hub_<entitet>, link_<entitet1>_<entitet2>,
   sat_<entitet>_<beskrivning>, dim_<entitet>, fact_<händelse>.
 - Materialisering: staging = view, raw_vault = table, marts = table.
