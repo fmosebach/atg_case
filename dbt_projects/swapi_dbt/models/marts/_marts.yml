@@ -1,0 +1,112 @@
+version: 2
+
+models:
+  - name: dim_person
+    description: Dimension för person (senaste attributversionen). Nyckel är hash-key som hex-sträng.
+    columns:
+      - name: person_key
+        description: Surrogatnyckel (hex av hub_person.person_hk).
+        data_tests: [unique, not_null]
+      - name: person_id
+        description: SWAPI-id.
+  - name: dim_film
+    description: Dimension för film (senaste attributversionen).
+    columns:
+      - name: film_key
+        description: Surrogatnyckel (hex av hub_film.film_hk).
+        data_tests: [unique, not_null]
+      - name: film_id
+        description: SWAPI-id.
+  - name: dim_planet
+    description: Dimension för planet (senaste attributversionen).
+    columns:
+      - name: planet_key
+        description: Surrogatnyckel (hex av hub_planet.planet_hk).
+        data_tests: [unique, not_null]
+      - name: planet_id
+        description: SWAPI-id.
+  - name: dim_species
+    description: Dimension för art (senaste attributversionen) plus en okänd medlem för personer utan art.
+    columns:
+      - name: species_key
+        description: Surrogatnyckel (hex av hub_species.species_hk). 32 nollor = Unknown.
+        data_tests: [unique, not_null]
+      - name: species_id
+        description: SWAPI-id (null för Unknown).
+  - name: dim_starship
+    description: Dimension för rymdskepp (senaste attributversionen).
+    columns:
+      - name: starship_key
+        description: Surrogatnyckel (hex av hub_starship.starship_hk).
+        data_tests: [unique, not_null]
+      - name: starship_id
+        description: SWAPI-id.
+  - name: dim_vehicle
+    description: Dimension för fordon (senaste attributversionen).
+    columns:
+      - name: vehicle_key
+        description: Surrogatnyckel (hex av hub_vehicle.vehicle_hk).
+        data_tests: [unique, not_null]
+      - name: vehicle_id
+        description: SWAPI-id.
+
+  - name: fact_person_film
+    description: >
+      Fakta med grain person x film. Summera character_count för karaktärer per film,
+      per hemvärld (homeworld_planet_key) eller per art (species_key).
+    columns:
+      - name: person_film_key
+        description: Unik nyckel för raden (hex av link_person_film_hk).
+        data_tests: [unique, not_null]
+      - name: person_key
+        data_tests:
+          - not_null
+          - relationships: {to: ref('dim_person'), field: person_key}
+      - name: film_key
+        data_tests:
+          - not_null
+          - relationships: {to: ref('dim_film'), field: film_key}
+      - name: homeworld_planet_key
+        description: Personens hemvärld.
+        data_tests:
+          - not_null
+          - relationships: {to: ref('dim_planet'), field: planet_key}
+      - name: species_key
+        description: Personens art, eller Unknown-nyckeln om art saknas.
+        data_tests:
+          - not_null
+          - relationships: {to: ref('dim_species'), field: species_key}
+      - name: character_count
+        description: Alltid 1; mått för COUNT/SUM i Power BI.
+  - name: fact_film_starship
+    description: Fakta med grain film x rymdskepp. Summera starship_count för skepp per film.
+    columns:
+      - name: film_starship_key
+        description: Unik nyckel för raden (hex av link_film_starship_hk).
+        data_tests: [unique, not_null]
+      - name: film_key
+        data_tests:
+          - not_null
+          - relationships: {to: ref('dim_film'), field: film_key}
+      - name: starship_key
+        data_tests:
+          - not_null
+          - relationships: {to: ref('dim_starship'), field: starship_key}
+      - name: starship_count
+        description: Alltid 1.
+  - name: fact_film_vehicle
+    description: Fakta med grain film x fordon. Summera vehicle_count för fordon per film.
+    columns:
+      - name: film_vehicle_key
+        description: Unik nyckel för raden (hex av link_film_vehicle_hk).
+        data_tests: [unique, not_null]
+      - name: film_key
+        data_tests:
+          - not_null
+          - relationships: {to: ref('dim_film'), field: film_key}
+      - name: vehicle_key
+        data_tests:
+          - not_null
+          - relationships: {to: ref('dim_vehicle'), field: vehicle_key}
+      - name: vehicle_count
+        description: Alltid 1.

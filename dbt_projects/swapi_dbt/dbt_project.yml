@@ -1,0 +1,25 @@
+name: swapi_dbt
+version: "1.0.0"
+
+profile: swapi_dbt
+
+model-paths: ["models"]
+seed-paths: ["seeds"]
+macro-paths: ["macros"]
+test-paths: ["tests"]
+clean-targets:
+  - "target"
+  - "dbt_packages"
+
+models:
+  swapi_dbt:
+    staging:
+      +materialized: view
+      +schema: staging
+    raw_vault:
+      # automate_dv hub/link/sat är insert-only och kräver incremental
+      +materialized: incremental
+      +schema: raw_vault
+    marts:
+      +materialized: table
+      +schema: marts

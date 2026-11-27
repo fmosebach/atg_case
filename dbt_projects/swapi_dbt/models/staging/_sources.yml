@@ -1,0 +1,19 @@
+version: 2
+
+sources:
+  - name: swapi
+    description: Rå SWAPI-data landad av ingestion. Append-only, flera batcher per objekt förekommer.
+    schema: RAW
+    tables:
+      - name: people
+        description: Rått JSON per person (en rad per objekt och batch).
+      - name: films
+        description: Rått JSON per film.
+      - name: planets
+        description: Rått JSON per planet.
+      - name: species
+        description: Rått JSON per art.
+      - name: starships
+        description: Rått JSON per rymdskepp.
+      - name: vehicles
+        description: Rått JSON per fordon.
