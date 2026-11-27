@@ -1,0 +1,155 @@
+version: 2
+
+models:
+  - name: base_people
+    description: Senaste batchen per person ur RAW.PEOPLE, parsad till platta kolumner. Id och FK-listor extraherade ur URL:er.
+    columns:
+      - name: person_id
+        description: Natural key, extraherat ur source_url.
+        data_tests: [unique, not_null]
+  - name: base_films
+    description: Senaste batchen per film ur RAW.FILMS, parsad till platta kolumner.
+    columns:
+      - name: film_id
+        description: Natural key, extraherat ur source_url.
+        data_tests: [unique, not_null]
+  - name: base_planets
+    description: Senaste batchen per planet ur RAW.PLANETS, parsad till platta kolumner.
+    columns:
+      - name: planet_id
+        description: Natural key, extraherat ur source_url.
+        data_tests: [unique, not_null]
+  - name: base_species
+    description: Senaste batchen per art ur RAW.SPECIES, parsad till platta kolumner.
+    columns:
+      - name: species_id
+        description: Natural key, extraherat ur source_url.
+        data_tests: [unique, not_null]
+  - name: base_starships
+    description: Senaste batchen per rymdskepp ur RAW.STARSHIPS, parsad till platta kolumner.
+    columns:
+      - name: starship_id
+        description: Natural key, extraherat ur source_url.
+        data_tests: [unique, not_null]
+  - name: base_vehicles
+    description: Senaste batchen per fordon ur RAW.VEHICLES, parsad till platta kolumner.
+    columns:
+      - name: vehicle_id
+        description: Natural key, extraherat ur source_url.
+        data_tests: [unique, not_null]
+
+  - name: stg_people
+    description: Staging för person med hash-key, hashdiff och record_source (automate_dv.stage).
+    columns:
+      - name: person_hk
+        description: Hash av person_id.
+        data_tests: [unique, not_null]
+      - name: person_details_hashdiff
+        description: Hashdiff över personens beskrivande attribut.
+        data_tests: [not_null]
+  - name: stg_films
+    description: Staging för film med hash-key, hashdiff och record_source (automate_dv.stage).
+    columns:
+      - name: film_hk
+        description: Hash av film_id.
+        data_tests: [unique, not_null]
+      - name: film_details_hashdiff
+        description: Hashdiff över filmens beskrivande attribut.
+        data_tests: [not_null]
+  - name: stg_planets
+    description: Staging för planet med hash-key, hashdiff och record_source (automate_dv.stage).
+    columns:
+      - name: planet_hk
+        description: Hash av planet_id.
+        data_tests: [unique, not_null]
+      - name: planet_details_hashdiff
+        description: Hashdiff över planetens beskrivande attribut.
+        data_tests: [not_null]
+  - name: stg_species
+    description: Staging för art med hash-key, hashdiff och record_source (automate_dv.stage).
+    columns:
+      - name: species_hk
+        description: Hash av species_id.
+        data_tests: [unique, not_null]
+      - name: species_details_hashdiff
+        description: Hashdiff över artens beskrivande attribut.
+        data_tests: [not_null]
+  - name: stg_starships
+    description: Staging för rymdskepp med hash-key, hashdiff och record_source (automate_dv.stage).
+    columns:
+      - name: starship_hk
+        description: Hash av starship_id.
+        data_tests: [unique, not_null]
+      - name: starship_details_hashdiff
+        description: Hashdiff över rymdskeppets beskrivande attribut.
+        data_tests: [not_null]
+  - name: stg_vehicles
+    description: Staging för fordon med hash-key, hashdiff och record_source (automate_dv.stage).
+    columns:
+      - name: vehicle_hk
+        description: Hash av vehicle_id.
+        data_tests: [unique, not_null]
+      - name: vehicle_details_hashdiff
+        description: Hashdiff över fordonets beskrivande attribut.
+        data_tests: [not_null]
+
+  - name: stg_person_film
+    description: En rad per person och film (flatten av people.films) med hash-keys för link_person_film.
+    columns:
+      - name: link_person_film_hk
+        description: Hash av person_id + film_id.
+        data_tests: [unique, not_null]
+  - name: stg_person_species
+    description: En rad per person och art (flatten av people.species) med hash-keys för link_person_species.
+    columns:
+      - name: link_person_species_hk
+        description: Hash av person_id + species_id.
+        data_tests: [unique, not_null]
+  - name: stg_person_starship
+    description: En rad per person och rymdskepp (flatten av people.starships) med hash-keys för link_person_starship.
+    columns:
+      - name: link_person_starship_hk
+        description: Hash av person_id + starship_id.
+        data_tests: [unique, not_null]
+  - name: stg_person_vehicle
+    description: En rad per person och fordon (flatten av people.vehicles) med hash-keys för link_person_vehicle.
+    columns:
+      - name: link_person_vehicle_hk
+        description: Hash av person_id + vehicle_id.
+        data_tests: [unique, not_null]
+  - name: stg_person_planet
+    description: En rad per person med hemvärld (people.homeworld) med hash-keys för link_person_planet.
+    columns:
+      - name: link_person_planet_hk
+        description: Hash av person_id + planet_id.
+        data_tests: [unique, not_null]
+  - name: stg_film_planet
+    description: En rad per film och planet (flatten av films.planets) med hash-keys för link_film_planet.
+    columns:
+      - name: link_film_planet_hk
+        description: Hash av film_id + planet_id.
+        data_tests: [unique, not_null]
+  - name: stg_film_species
+    description: En rad per film och art (flatten av films.species) med hash-keys för link_film_species.
+    columns:
+      - name: link_film_species_hk
+        description: Hash av film_id + species_id.
+        data_tests: [unique, not_null]
+  - name: stg_film_starship
+    description: En rad per film och rymdskepp (flatten av films.starships) med hash-keys för link_film_starship.
+    columns:
+      - name: link_film_starship_hk
+        description: Hash av film_id + starship_id.
+        data_tests: [unique, not_null]
+  - name: stg_film_vehicle
+    description: En rad per film och fordon (flatten av films.vehicles) med hash-keys för link_film_vehicle.
+    columns:
+      - name: link_film_vehicle_hk
+        description: Hash av film_id + vehicle_id.
+        data_tests: [unique, not_null]
+  - name: stg_species_planet
+    description: En rad per art med hemvärld (species.homeworld, null uteslutna) med hash-keys för link_species_planet.
+    columns:
+      - name: link_species_planet_hk
+        description: Hash av species_id + planet_id.
+        data_tests: [unique, not_null]
