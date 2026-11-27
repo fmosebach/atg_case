@@ -1,7 +1,7 @@
 # AGENTS.md – ATG Case: SWAPI → Data Vault → Power BI
 
 ## Projektöversikt
-Pipeline som hämtar data från swapi.tech, landar rått JSON i Snowflake,
+Pipeline som hämtar data från swapi.dev, landar rått JSON i Snowflake,
 modellerar enligt Data Vault 2.0 (hub/link/satellite) med dbt, och
 exponerar ett star schema för Power BI.
 
@@ -19,5 +19,5 @@ exponerar ett star schema för Power BI.
 
 ## Mappar och ansvar
 - /ingestion → ägs av ingestion-agenten (se ingestion/AGENTS.md)
-- /dbt_project → ägs av transform-agenten (se dbt_project/AGENTS.md)
+- /dbt_projects/swapi_dbt → ägs av transform-agenten (se dbt_projects/AGENTS.md)
 - Granskning sker via PR, inte direkt på main.
